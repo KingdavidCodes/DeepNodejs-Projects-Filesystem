@@ -85,8 +85,6 @@ const deletedPerson = (req, res) => {
 
 
 
-
-
 module.exports = {
     getPeople,
     singlePerson,
