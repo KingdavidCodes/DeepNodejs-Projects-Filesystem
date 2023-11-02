@@ -1,6 +1,6 @@
 const url = require('url');
 
-const notFound = (req, res) => {
+const notFound = (req, res, next) => {
   const url_string = url.parse(req.url, true);
   const route = url_string.pathname
 

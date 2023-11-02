@@ -2,11 +2,12 @@ const http = require('http');
 const express = require('express');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorsHandler');
+const dbConnect = require('./config/dbConnection');
 require('dotenv').config();
 
-
-const port = process.env.PORT || 5000;
+dbConnect();
 const app = express();
+const port = process.env.PORT || 5000;
 
 
 
@@ -18,7 +19,8 @@ app.use('/api/posts', require('./routes/postRoutes'));
 
 // * Error handler & Unknown route handler 
 app.use(errorHandler);
-app.use(notFound);
+// app.use(notFound);
+
 
 http.createServer(app).listen(port, () => {
   console.log(`server running on port: ${port}`);
