@@ -16,10 +16,11 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use('/api/posts', require('./routes/postRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 // * Error handler & Unknown route handler 
 app.use(errorHandler);
-// app.use(notFound);
+app.use(notFound);
 
 
 http.createServer(app).listen(port, () => {

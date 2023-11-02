@@ -6,10 +6,11 @@ const Post = require('../models/postModel');
 
 //* @desc Get all posts
 //* @route GET /api/posts
-//* access Public
+//* access Private
 const getAllPosts = asyncHandler( async(req, res) => {
   const { numLikes } = req.query;
   const queryCollection = {};
+  queryCollection['user_id'] = req.user.id;
 
   if(numLikes){
     const rateOperators = {
@@ -34,14 +35,14 @@ const getAllPosts = asyncHandler( async(req, res) => {
     });
   }
 
-  const post = await Post.find(queryCollection);
+  const post = await Post.find({ user_id: req.user.id});
   res.status(200).json({nbHits: post.length, post});
 });
 
 
 //* @desc Create posts
 //* @route POST /api/posts
-//* access Public
+//* access Private
 const createPosts = asyncHandler( async(req, res) => {
   const { post: postBody, likes } = req.body
   if(!postBody){
@@ -50,6 +51,7 @@ const createPosts = asyncHandler( async(req, res) => {
   }
 
   const post = await Post.create({
+    user_id: req.user.id,
     post: postBody,
     likes
   })
@@ -59,15 +61,19 @@ const createPosts = asyncHandler( async(req, res) => {
 
 //* @desc Get single posts
 //* @route GET /api/posts/:id
-//* access Public
+//* access Private
 const getSinglePost = asyncHandler( async(req, res) => {
   const { id: postID } = req.params;
   if(!postID || !mongoose.isValidObjectId(postID)){
     res.status(400);
     throw new Error("Please input a valid ID");
   }
-  
   const post = await Post.findOne({_id: postID});
+  if(post.user_id.toString() !== req.user.id){
+    res.status(403);
+    throw new Error("User don't have permission to access other post");
+  }
+
 
   // * checking if post with the ID cant be found
   if(!post){
@@ -80,7 +86,7 @@ const getSinglePost = asyncHandler( async(req, res) => {
 
 //* @desc Update single post
 //* @route PUT /api/posts/:id
-//* access Publ
+//* access Private
 const updatePost = asyncHandler( async(req, res) => {
   const { id: postID } = req.params;
   const post = await Post.findOne({ _id: postID});
@@ -88,6 +94,12 @@ const updatePost = asyncHandler( async(req, res) => {
   if(!postID || !mongoose.isValidObjectId(postID)){
     res.status(400);
     throw new Error("Please input a valid ID");
+  }
+
+  // * validation to stop users from editing others contact
+  if(post.user_id.toString() !== req.user.id){
+    res.status(403);
+    throw new Error("User don't have permission to update other user post");
   }
 
   if(!post){
@@ -105,15 +117,21 @@ const updatePost = asyncHandler( async(req, res) => {
 
 //* @desc Delete single post
 //* @route PUT /api/posts/:id
-//* access Public
+//* access Private
 const deletePost = asyncHandler( async(req, res) => {
   const { id: postID } = req.params;
   const post = await Post.findOne({ _id: postID});
-  
   if(!postID || !mongoose.isValidObjectId(postID)){
     res.status(400);
     throw new Error("Please input a valid ID");
   }
+  
+  if(post.user_id.toString() !== req.user.id){
+    res.status(403);
+    throw new Error("User don't have permission to delete other user post");
+  }
+
+
 
   if(!post){
     res.status(404);
